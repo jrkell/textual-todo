@@ -1,0 +1,4 @@
+change default theme
+add edit button
+add move up/down bindings
+test
