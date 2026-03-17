@@ -1,1 +1,7 @@
-work stuff
+talk to Serhii about updating ETL sync
+add auto-refresh for dashboards
+build dashboard for activations
+add ETL to read-only-role in psql
+add pbix file to FAS repo!!!
+start eva-60
+research more about DDD
