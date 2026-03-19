@@ -30,6 +30,16 @@ class TodoApp(App):
         Input {
             width: 100%;
         }
+
+        #category-label {
+            width: 100%;
+            text-align: center;
+            text-style: bold;
+            background: $accent;
+            color: $text;
+            padding: 0 1;
+            height: 1;
+        }
     """
 
     TITLE = APP_TITLE
@@ -48,10 +58,12 @@ class TodoApp(App):
         self.todo_list_view = TodoListView(self.list_manager)
         self.done_list_view = DoneListView(self.list_manager)
         self.input = TodoInput()
+        self.category_label = Label(f"Current Category: {self.category_manager.current_list_name}", id="category-label")
     
     def compose(self):
         yield Header(show_clock=True, icon='🖊️')
         with Vertical():
+            yield self.category_label
             with Horizontal():
                 yield self.todo_list_view
                 yield self.done_list_view
@@ -64,6 +76,7 @@ class TodoApp(App):
 
     def reload_lists_from_files(self):
         self.list_manager.load_lists()
+        self.category_label.update(f"Current Category: {self.category_manager.current_list_name}")
         self.todo_list_view.update_list_display()
         self.done_list_view.update_list_display()
 
