@@ -47,7 +47,7 @@ class TodoApp(App):
         self.list_manager = ListManager(self, self.category_manager)
         self.todo_list_view = TodoListView(self.list_manager)
         self.done_list_view = DoneListView(self.list_manager)
-        self.input = Input()
+        self.input = TodoInput()
     
     def compose(self):
         yield Header(show_clock=True, icon='🖊️')
@@ -70,10 +70,6 @@ class TodoApp(App):
     def update_lists(self):
         self.todo_list_view.update_list_display()
         self.done_list_view.update_list_display()
-
-    def on_input_submitted(self, submitted: Input.Submitted) -> None:
-        self.todo_list_view.save_or_edit_todo(submitted.value)
-        self.input.value = ""
     
     def focus_list_view(self, index: int):
         self.todo_list_view.index = index
@@ -86,9 +82,24 @@ class TodoApp(App):
     def action_select_category(self):
         self.push_screen(SelectCategoryScreen(self.category_manager))
 
+    def notify_todo_input_submitted(self, inputStr: str):
+        self.todo_list_view.save_or_edit_todo(inputStr)
+
+    def notify_category_input_submitted(self, inputStr: str):
+        self.category_manager.add_new_list(inputStr)
+        self.reload_lists_from_files()
+
+class TodoInput(Input):
+    def __init__(self):
+        super().__init__(placeholder="Add new todo here...")
+
+    def on_input_submitted(self, submitted: Input.Submitted) -> None:
+        self.app.notify_todo_input_submitted(submitted.value)
+        self.value = ""
+
 class CategoryManager():
     def __init__(self):
-        self.current_list_name: str = open(CURRENT_LIST_FILE, "r", encoding='utf-8').read()
+        self.current_list_name: str = open(CURRENT_LIST_FILE, "r", encoding='utf-8').read().strip()
         self.list_names = self.get_list_names()
 
     def get_list_names(self):
@@ -106,6 +117,8 @@ class CategoryManager():
     def add_new_list(self, name: str):
         Path(f"{SAVE_FILE_DIR}/{name}.txt").touch()
         Path(f"{SAVE_FILE_DIR}/{name}.done.txt").touch()
+        self.list_names.append(name)
+        self.switch_list(len(self.list_names)-1)
 
 class ListManager():
     def __init__(self, app: TodoApp, category_manager: CategoryManager):
@@ -253,7 +266,8 @@ class DoneListView(ListView):
 class SelectCategoryScreen(ModalScreen[None]):
     BINDINGS = [
         ("q", "app.pop_screen", "close window"),
-        ("space", "switch_category", "select category")    
+        ("space", "switch_category", "select category"),
+        ("a", "show_add_category_screen", "add category")    
     ]
     
     DEFAULT_CSS = """
@@ -291,6 +305,23 @@ class SelectCategoryScreen(ModalScreen[None]):
         self.category_manager.switch_list(self.list_view.index)
         self.app.reload_lists_from_files()
         self.app.pop_screen()
+
+    def action_show_add_category_screen(self):
+        self.app.push_screen(CategoryModalScreen())
+
+class CategoryModalScreen(ModalScreen[None]):
+    def compose(self):
+        yield CategoryInput()
+
+class CategoryInput(Input):
+    def __init__(self):
+        super().__init__(placeholder="Enter category name") 
+
+    def on_input_submitted(self, submitted: Input.Submitted) -> None:
+        self.app.pop_screen()
+        self.app.pop_screen()
+        self.app.notify_category_input_submitted(submitted.value)
+        self.value = ""
 
 class TodoListItem(ListItem):
     def __init__(self, label: str):
