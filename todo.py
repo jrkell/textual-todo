@@ -165,6 +165,10 @@ class ListManager():
         self.save_todo_list()
 
     def move_todo(self, index: int, move_by: int):
+        # skip if can't move any further up or down
+        if ((index == 0 and move_by == -1) or (index == len(self.todo_list) and move_by == 1)):
+            return
+
         item = self.todo_list.pop(index)
         self.todo_list.insert(index+move_by, item)
         self.save_todo_list()
