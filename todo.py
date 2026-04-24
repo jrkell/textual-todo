@@ -185,10 +185,16 @@ class ListManager():
         self.todo_list[index] = new_todo
         self.save_todo_list()
 
+    def delete_todo(self, index: int):
+        self.todo_list.pop(index)
+        self.save_todo_list()
+        self.app.update_lists()
+
 class TodoListView(ListView):
     BINDINGS = {
         ("a", "add_todo", "add"),
         ("d", "move_to_done", "move to done"),
+        ("delete", "delete_todo", "delete"),
         ("e", "edit_todo", "edit"),
         ("shift+up", "move_todo_up", "move up"),
         ("shift+down", "move_todo_down", "move down")
@@ -247,6 +253,9 @@ class TodoListView(ListView):
 
     def action_move_todo_down(self):
         self.move_todo(1)
+
+    def action_delete_todo(self):
+        self.list_manager.delete_todo(self.index)
 
 class DoneListView(ListView):
     def __init__(self, list_manager: ListManager):
